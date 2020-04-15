@@ -1,0 +1,16 @@
+Using library WiFi at version 1.0 in folder: C:\Users\Alpha\AppData\Local\Arduino15\packages\esp32\hardware\esp32\1.0.4\libraries\WiFi 
+Using library ESPmDNS at version 1.0 in folder: C:\Users\Alpha\AppData\Local\Arduino15\packages\esp32\hardware\esp32\1.0.4\libraries\ESPmDNS 
+Using library ESPAsyncWebServer at version 1.2.2 in folder: D:\zRedirectedFolders\_Documents\Arduino\libraries\ESPAsyncWebServer 
+Using library FS at version 1.0 in folder: C:\Users\Alpha\AppData\Local\Arduino15\packages\esp32\hardware\esp32\1.0.4\libraries\FS 
+Using library AsyncTCP at version 1.1.0 in folder: D:\zRedirectedFolders\_Documents\Arduino\libraries\AsyncTCP 
+Using library SPIFFS at version 1.0 in folder: C:\Users\Alpha\AppData\Local\Arduino15\packages\esp32\hardware\esp32\1.0.4\libraries\SPIFFS 
+Using library Wire at version 1.0.1 in folder: C:\Users\Alpha\AppData\Local\Arduino15\packages\esp32\hardware\esp32\1.0.4\libraries\Wire 
+Using library ThingSpeak at version 1.5.0 in folder: D:\zRedirectedFolders\_Documents\Arduino\libraries\ThingSpeak 
+Using library ArduinoUniqueID at version 1.0.9 in folder: D:\zRedirectedFolders\_Documents\Arduino\libraries\ArduinoUniqueID 
+Using library ArduinoOTA at version 1.0 in folder: C:\Users\Alpha\AppData\Local\Arduino15\packages\esp32\hardware\esp32\1.0.4\libraries\ArduinoOTA 
+Using library Update at version 1.0 in folder: C:\Users\Alpha\AppData\Local\Arduino15\packages\esp32\hardware\esp32\1.0.4\libraries\Update 
+Using library Adafruit_Sensor at version 1.0.3 in folder: D:\zRedirectedFolders\_Documents\Arduino\libraries\Adafruit_Sensor 
+Using library Adafruit_BMP280_Library at version 2.0.1 in folder: D:\zRedirectedFolders\_Documents\Arduino\libraries\Adafruit_BMP280_Library 
+Using library SPI at version 1.0 in folder: C:\Users\Alpha\AppData\Local\Arduino15\packages\esp32\hardware\esp32\1.0.4\libraries\SPI 
+Using library Adafruit_Si7021_Library at version 1.2.3 in folder: D:\zRedirectedFolders\_Documents\Arduino\libraries\Adafruit_Si7021_Library 
+Using library esp8266-oled-ssd1306 at version 4.1.0 in folder: D:\zRedirectedFolders\_Documents\Arduino\libraries\esp8266-oled-ssd1306 
