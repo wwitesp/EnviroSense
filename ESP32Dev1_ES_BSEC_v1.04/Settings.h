@@ -3,10 +3,10 @@ char* model = "ESP32Dev1ESbsec";
 char* ver = "v1.0";
 char* fw = "v1.04.140420";
 char* fwname = "ESP32Dev1_ES_BSEC_v1.04";
-const char* ssid1 = "sec01";   // WiFi SSID to connect to
-const char* password1 = "2018wiskeylima!"; // WiFi password needed for the SSID
-const char* ssid2 = "AlphaHome";   // WiFi SSID to connect to
-const char* password2 = "WiskeyLima!"; // WiFi password needed for the SSID
+const char* ssid1 = "zzzz";   // WiFi SSID to connect to
+const char* password1 = "zzzz"; // WiFi password needed for the SSID
+const char* ssid2 = "zzzz";   // WiFi SSID to connect to
+const char* password2 = "zzzz"; // WiFi password needed for the SSID
 //const char* AP = device;
 const char* APpassword = ""; // WiFi password needed for the SSID
 char* screenweb = "On";
@@ -39,8 +39,8 @@ char thingSpeakAddress[] = "api.thingspeak.com";
 unsigned long ETCChannelNumber = 830856;
 unsigned long ESChannelNumber = 986281;
 unsigned int result; // Baseline
-const char* ETCwriteAPIKey = "QS1MMITLAZGHQT31";   // Get the key for your channel to approve writing
-const char* ESwriteAPIKey = "HPBHVJNNIK2MIM9S";   // Get the key for your channel to approve writing
+const char* ETCwriteAPIKey = "zzzz";   // Get the key for your channel to approve writing
+const char* ESwriteAPIKey = "zzzz";   // Get the key for your channel to approve writing
 const int UpdateThingSpeakInterval = 10 * 60; // e.g. 10 * 60 for a 10-Min update interval (10-mins x 60-secs)
 unsigned long SCRNpreviousMillis;
 unsigned long Uni_FlashLEDprevious;
