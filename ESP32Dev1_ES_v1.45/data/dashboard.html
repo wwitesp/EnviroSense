@@ -1,0 +1,215 @@
+<!DOCTYPE HTML><html>
+<head>
+  <title>EnviroSense Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">	
+    <link rel="stylesheet" type="text/css" href="dashboard.css">
+</head>
+	<div class = "title">
+     <header>
+       <h1>EnviroSense</h1>
+     </header>
+    <div class="dashboard">     
+    	<p><a href="config">Screen Control</a></p>
+ </div> 
+<body>     
+    <div class="dashboard">
+         <div class="circle-container">
+            <div class="circle">
+                 <div class="circle__content">
+                  <span id="bmp280_temp" class="readings">%BPM280_TEMP%</span>
+                </div>
+                <div class="circle__lower-text">
+                    Temperature <sup>&deg;C</sup>
+                </div>
+            </div>
+       </div>
+         <div class="circle-container">
+            <div class="circle">
+                 <div class="circle__content">
+                  <span id="dewpoint_c" class="readings">%DEWPOINT_C%</span>
+                </div>
+                <div class="circle__lower-text">
+                    Dew Point <sup>&deg;C</sup>
+                </div>
+            </div>
+		</div>       
+          <div class="circle-container">
+            <div class="circle">
+                 <div class="circle__content">
+                  <span id="bmp280_pres" class="readings">%BMP280_PRES%</span>
+                </div>
+                <div class="circle__lower-text">
+                    Pressure <sup>hpa</sup>
+                </div>
+			</div>
+		</div>
+		         <div class="circle-container">
+            <div class="circle">
+                <div class="circle__content">
+                  <span id="current_humidity" class="readings">%CURRENT_HUMIDITY%</span>
+                </div>
+                <div class="circle__lower-text">
+                    Humidity <sup>&#37;</sup>
+                </div>
+            </div>
+        </div>
+		 <div class="circle-container">
+			 <div class="circle">
+                <div class="circle__content">
+                  <span id="ab_humi" class="readings">%AB_HUMI%</span>
+                </div>
+                <div class="circle__lower-text">
+                    Abs Humidity <sup>g/m3</sup>
+                </div>
+            </div>
+        </div>
+</div>
+    <div class="dashboard">
+	         <div class="circle-container">
+            <div class="circle">
+                 <div class="circle__content">
+                  <span id="eco2" class="readings">%ECO2%</span>
+                </div>
+                <div class="circle__lower-text">
+                    Co2 <sup>ppm</sup>
+                </div>
+            </div>
+		</div>
+		 <div class="circle-container">
+            <div class="circle">
+                 <div class="circle__content">
+                  <span id="final_air_quality_score" class="readings">%FINAL_AIR_QUALITY_SCORE%</span>
+                </div>
+                <div class="circle__lower-text">
+                    Air Quality Score
+                </div>
+            </div>
+		</div>
+         <div class="circle-container">
+            <div class="circle">
+                 <div class="circle__content">
+                  <span id="etvoc" class="readings">%ETVOC%</span>
+                </div>
+                <div class="circle__lower-text">
+                    VOC <sup>ppb</sup>
+                </div>
+            </div>
+		</div>
+	</div>
+    <div class="dashboard">    
+         <div class="circle-container">
+            <div class="circle">
+                 <div class="circle__content">
+                  <span id="UVa" class="readings">%UVA%</span>
+                </div>
+                <div class="circle__lower-text">
+                    UVa
+                </div>
+			</div>
+		</div>
+         <div class="circle-container">
+            <div class="circle">
+                 <div class="circle__content">
+                  <span id="UVb" class="readings">%UVB%</span>
+                </div>
+                <div class="circle__lower-text">
+                    UVb
+                </div>
+            </div>
+		</div>
+	         <div class="circle-container">
+            <div class="circle">
+                 <div class="circle__content">
+                  <span id="UVi" class="readings">%UVI%</span>
+                </div>
+                <div class="circle__lower-text">
+                    UV Index <sup>/10</sup>
+                </div>
+			</div>
+		</div>
+	</div>
+    <div class="dashboard">
+         <div class="circle-container">
+            <div class="circle">
+                 <div class="circle__content">
+                  <span id="CO2Health" class="readings">%CO2HEALTH%</span>
+                </div>
+                <div class="circle__lower-text">
+                    Co2 Health
+                </div>
+			</div>	
+		</div>		
+         <div class="circle-container">
+            <div class="circle">
+                 <div class="circle__content">
+                  <span id="iaq" class="readings">%IAQ%</span>
+                </div>
+                <div class="circle__lower-text">
+                    Air Quality
+                </div>
+            </div>
+		</div>		
+         <div class="circle-container">
+            <div class="circle">
+                 <div class="circle__content">
+                  <span id="UVIScore" class="readings">%UVISCORE%</span>
+                </div>
+                <div class="circle__lower-text">
+                    UV risk factor
+                </div>
+            </div>
+		</div>		 		
+         <div class="circle-container">
+            <div class="circle">
+                 <div class="circle__content">
+                  <span id="UVIExp_text" class="readings">%UVIEXP_TEXT%</span>
+                </div>
+                <div class="circle__lower-text">
+                    UV exposure allowed
+                </div>
+            </div>
+		</div>	
+	</div>
+    <div class="dashboard">	
+         <div class="circle-container">
+        <h6>FW: <span id="fw" class="sm_readings">%FW%</span></h6>
+        <h6>Up Time: <span id="getUptime" class="sm_readings">%GETUPTIME%</span></h6>
+        <h6>Serial: <span id="chipid" class="sm_readings">%CHIPID%</span></h6>        
+		</div>		
+	</div>	
+</body> 
+<script>
+setInterval(updateValues, 1000, "bmp280_temp");
+setInterval(updateValues, 1000, "dewpoint_c");
+setInterval(updateValues, 1000, "bmp280_pres");
+setInterval(updateValues, 1000, "current_humidity");
+setInterval(updateValues, 1000, "ab_humi");
+setInterval(updateValues, 1000, "eco2");
+setInterval(updateValues, 1000, "etvoc");
+setInterval(updateValues, 1000, "CO2Health");
+setInterval(updateValues, 1000, "final_air_quality_score");
+setInterval(updateValues, 1000, "iaq");
+setInterval(updateValues, 1000, "UVa");
+setInterval(updateValues, 1000, "UVb");
+setInterval(updateValues, 1000, "UVi");
+setInterval(updateValues, 1000, "UVIScore");
+setInterval(updateValues, 1000, "UVIExp_text");
+setInterval(updateValues, 1000, "fw");
+setInterval(updateValues, 1000, "chipid");
+setInterval(updateValues, 1000, "getUptime");
+setInterval(updateValues, 1000, "screen");
+setInterval(updateValues, 1000, "screenweb");
+setInterval(updateValues, 1000, "cycleweb");
+function updateValues(value) {
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      document.getElementById(value).innerHTML = this.responseText;
+    }
+  };
+  xhttp.open("GET", "/" + value, true);
+  xhttp.send();
+}
+</script>
+</html>
