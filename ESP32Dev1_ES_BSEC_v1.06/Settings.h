@@ -1,12 +1,12 @@
 char* device = "EnviroSense";
 char* model = "ESP32Dev1ESbsec";
 char* ver = "v1.0";
-char* fw = "v1.04.140420";
-char* fwname = "ESP32Dev1_ES_BSEC_v1.04";
-const char* ssid1 = "zzzz";   // WiFi SSID to connect to
-const char* password1 = "zzzz"; // WiFi password needed for the SSID
-const char* ssid2 = "zzzz";   // WiFi SSID to connect to
-const char* password2 = "zzzz"; // WiFi password needed for the SSID
+char* fw = "v1.06.150420";
+char* fwname = "ESP32Dev1_ES_BSEC_v1.06";
+const char* ssid1 = "zzz";   // WiFi SSID to connect to
+const char* password1 = "zzz"; // WiFi password needed for the SSID
+const char* ssid2 = "zzz";   // WiFi SSID to connect to
+const char* password2 = "zzz"; // WiFi password needed for the SSID
 //const char* AP = device;
 const char* APpassword = ""; // WiFi password needed for the SSID
 char* screenweb = "On";
@@ -39,8 +39,8 @@ char thingSpeakAddress[] = "api.thingspeak.com";
 unsigned long ETCChannelNumber = 830856;
 unsigned long ESChannelNumber = 986281;
 unsigned int result; // Baseline
-const char* ETCwriteAPIKey = "zzzz";   // Get the key for your channel to approve writing
-const char* ESwriteAPIKey = "zzzz";   // Get the key for your channel to approve writing
+const char* ETCwriteAPIKey = "ZZZ";   // Get the key for your channel to approve writing
+const char* ESwriteAPIKey = "ZZZ";   // Get the key for your channel to approve writing
 const int UpdateThingSpeakInterval = 10 * 60; // e.g. 10 * 60 for a 10-Min update interval (10-mins x 60-secs)
 unsigned long SCRNpreviousMillis;
 unsigned long Uni_FlashLEDprevious;
@@ -72,6 +72,12 @@ uint64_t chipid;
 uint16_t eco2, etvoc, errstat, raw;
 String output, iaq_acc_text;
 Bsec iaqSensor;
+const uint8_t bsec_config_iaq[] = {
+#include "config/generic_33v_3s_4d/bsec_iaq.txt"
+};
+uint8_t bsecState[BSEC_MAX_STATE_BLOB_SIZE] = {0};
+uint16_t stateUpdateCounter = 0;
+
 String SerialNo;
 String Format = "X";   // Time format M for dd-mm-yy and 23:59:59, "I" for mm-dd-yy and 12:59:59 PM, "X" for Metric units.
 static String         Date_str, Time_str, IAQ, CO2Health, UVIScore, UVIExp_text, UVIScore_text;

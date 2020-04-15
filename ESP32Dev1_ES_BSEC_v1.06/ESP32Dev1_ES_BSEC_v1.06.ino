@@ -19,6 +19,7 @@
 #include <WiFi.h>
 #include <ESPAsyncWebServer.h>
 #include <SPIFFS.h>
+#include <EEPROM.h>
 #include "bsec.h"
 #include <WiFiClient.h>
 #include "Settings.h"
@@ -35,6 +36,7 @@
 #include "uptime_formatter.h"  // https://github.com/YiannisBourkelis/Uptime-Library
 #include "ccs811.h"  // ccs811 - Co2 & VoC sensor  https://github.com/maarten-pennings/CCS811
 #include "VEML6075.h"  // https://github.com/schizobovine/VEML6075
+#define STATE_SAVE_PERIOD  UINT32_C(360 * 60 * 1000) // 360 minutes - 4 times a day
 #define pressure_offset 6.5  // Air pressure calibration, adjust for your altitude
 CCS811 ccs811(23);  // nWAKE on 23
 SSD1306 display(0x3c, SDA, SCL);   // OLED display object definition (address, SDA, SCL)
@@ -112,12 +114,14 @@ String processor(const String & var) {
 }
 void checkIaqSensorStatus(void);
 void err_Leds_bme680(void);
-
+void loadState(void);
+void updateState(void);
 
 WiFiMulti wifiMulti;
 WiFiClient  client;
 //*****************************************************************************************
 void setup(void) {
+  EEPROM.begin(BSEC_MAX_STATE_BLOB_SIZE + 1); // 1st address for the length
   Serial.begin(115200);
   chipid = ESP.getEfuseMac(); //The chip ID is essentially its MAC address(length: 6 bytes).
   //  setCpuFrequencyMhz(240);
@@ -125,8 +129,14 @@ void setup(void) {
   SerialNo = (uint32_t)chipid;
   powerSaving();
   config_wire();
-   iaqSensor.begin(BME680_I2C_ADDR_SECONDARY, Wire);
+
+  iaqSensor.begin(BME680_I2C_ADDR_SECONDARY, Wire);
   checkIaqSensorStatus();
+
+  iaqSensor.setConfig(bsec_config_iaq);
+  checkIaqSensorStatus();
+
+  loadState();
 
   bsec_virtual_sensor_t sensorList[10] = {
     BSEC_OUTPUT_RAW_TEMPERATURE,
@@ -143,10 +153,11 @@ void setup(void) {
 
   iaqSensor.updateSubscription(sensorList, 10, BSEC_SAMPLE_RATE_LP);
   checkIaqSensorStatus();
- 
+
   Start_OLED_Setup();
   StartWiFi();
   MDNS.begin(device);
+  OTASetup();
   Start_Time_Services();
   Setup_Interrupts_and_Initialise_Clock(); // Setup a timer interrupt to occur every 1-second, to keep seconds accurate
   ccs811.set_i2cdelay(50);
@@ -161,7 +172,7 @@ void setup(void) {
   if (!ccs811.begin()) Serial.println("Could not find a valid CO2 VoC sensor - error code CCS");
   ccs811.start(CCS811_MODE_10SEC);
   TScount = ThingSpeak.readFloatField(986281, 1);  // Read TS update count and restore local counter
- 
+
   if (!SPIFFS.begin()) {
     Serial.println("An Error has occurred while mounting SPIFFS");
     return;
@@ -316,11 +327,7 @@ void loop(void)
   Check_WiFi_ConnectStatus(); // Checks for loss of WiFi network cinnection & auto reconnect once WiFi network is available again.
   UpdateLocalTime(); // Variables 'Date_str' and 'Time_str' now have current date-time values
   Screen_State();
-//    if (iaqSensor.run()) { // If new data is available
-  
   Read_SensorPack(); // Reading of sensor pack ex. bme680
-bme680_output();
-//}
   Screen_State();
   TSUpload();
   //  LEDs();
@@ -339,29 +346,6 @@ void IRAM_ATTR Timer_TImeout_ISR(void) {
 //*****************************************************************************************
 void config_wire(void) {
   Wire.begin(SDA, SCL); // Start the Wire service for the OLED display - ESP32 Dev1 board.
-}
-//*****************************************************************************************
-void bme680_output(void) {
-//  if (DebugMode == 1) {
-    output = String();
-    // output += ", " + String(iaqSensor.rawTemperature);
-    output += "Pressure: " + String(iaqSensor.pressure);
-    // output += ", " + String(iaqSensor.rawHumidity);
-    // output += ", " + String(iaqSensor.gasResistance);
-    output += "  IAQ: " + String(iaqSensor.iaq);
-    output += "  IAQ acc: " + String(iaqSensor.iaqAccuracy);
-    output += "  T: " + String(iaqSensor.temperature);
-    output += "  RH: " + String(iaqSensor.humidity);
-    output += "  Static IAQ: " + String(iaqSensor.staticIaq);
-    output += "  CO2: " + String(iaqSensor.co2Equivalent);
-    output += "  VOC: " + String(iaqSensor.breathVocEquivalent);
-    output += "  Static IAQ acc: " + String(iaqSensor.staticIaqAccuracy);
-    output += "  CO2 acc: " + String(iaqSensor.co2Accuracy);
-    output += "  VOC acc: " + String(iaqSensor.breathVocAccuracy);
-    output += "  Gas R acc: " + String(iaqSensor.compGasAccuracy);
-    output += "  Gas % acc: " + String(iaqSensor.gasPercentageAcccuracy);
-    Serial.println(output);
-//  }
 }
 //*****************************************************************************************
 void Esp32Reset(void) {
@@ -398,6 +382,10 @@ void StartWiFi(void)
   }
   resetcounter = 2;  // Stops the ESP.restart() after inital boot & WiFi connect fail
   // Serial.println("\nConnected to " + WiFi.SSID() + " Use IP address: " + WiFi.localIP().toString()); // Report which SSID and IP is in use
+}
+//*****************************************************************************************
+void OTASetup(void)
+{
   // ArduinoOTA.setPort(3232);  // Port defaults to 3232
   ArduinoOTA.setHostname(model);  // Hostname defaults to esp3232-[MAC]
   // ArduinoOTA.setPassword("ESP32Dev1"); // No authentication by default
@@ -439,8 +427,8 @@ void StartWiFi(void)
     else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
     else if (error == OTA_END_ERROR)     Serial.println("End Failed");
   });
-  ArduinoOTA.begin();
-  ArduinoOTA.handle();
+    ArduinoOTA.begin();
+  //  ArduinoOTA.handle();
 }
 //*****************************************************************************************
 void Start_Time_Services(void) {
@@ -499,22 +487,23 @@ void TSUpload(void) {
 }
 //**************************************************************************************
 void Read_SensorPack(void) {
-//  checkIaqSensorStatus();
-    if (iaqSensor.run()) {
-    bme680_output();
-    }
-  iaq_acc = iaqSensor.iaqAccuracy;
-  iaq_score = iaqSensor.iaq;
-  if (Format == "M" || Format == "X") C_Temp = iaqSensor.temperature;
-  else C_Temp = iaqSensor.temperature * 9.00F / 5.00F + 32;
-  if (Format == "M" || Format == "X") C_Pressure = iaqSensor.pressure / 100.0F + pressure_offset;
-  else C_Pressure = (iaqSensor.pressure / 100.0F + pressure_offset) / 33.863886666667; // For inches
-  temp_f = C_Temp * 9 / 5 + 32;
-  C_Humidity = iaqSensor.humidity;  // Humidity Sensor
-  ab_humi = (6.112 * pow(2.71828, ((17.67 * C_Temp) / (243.5 + C_Temp))) * C_Humidity * 2.1674) / (273.15 + C_Temp);
-  dewpoint_c = 243.5 * (log(C_Humidity / 100) + ((17.67 * C_Temp) / (243.5 + C_Temp))) / (17.67 - log(C_Humidity / 100) - ((17.67 * C_Temp) / (243.5 + C_Temp)));
-  //  dewpoint_f = (243.5 * (log(C_Humidity / 100) + ((17.67 * C_Temp) / (243.5 + C_Temp))) / (17.67 - log(C_Humidity / 100) - ((17.67 * C_Temp) / (243.5 + C_Temp)))) * 9 / 5 + 32;
-  ccs811.set_envdata(C_Temp, C_Humidity);
+  if (iaqSensor.run()) {
+    iaq_acc = iaqSensor.iaqAccuracy;
+    iaq_score = iaqSensor.iaq;
+    if (Format == "M" || Format == "X") C_Temp = iaqSensor.temperature;
+    else C_Temp = iaqSensor.temperature * 9.00F / 5.00F + 32;
+    if (Format == "M" || Format == "X") C_Pressure = iaqSensor.pressure / 100.0F + pressure_offset;
+    else C_Pressure = (iaqSensor.pressure / 100.0F + pressure_offset) / 33.863886666667; // For inches
+    temp_f = C_Temp * 9 / 5 + 32;
+    C_Humidity = iaqSensor.humidity;  // Humidity Sensor
+    ab_humi = (6.112 * pow(2.71828, ((17.67 * C_Temp) / (243.5 + C_Temp))) * C_Humidity * 2.1674) / (273.15 + C_Temp);
+    dewpoint_c = 243.5 * (log(C_Humidity / 100) + ((17.67 * C_Temp) / (243.5 + C_Temp))) / (17.67 - log(C_Humidity / 100) - ((17.67 * C_Temp) / (243.5 + C_Temp)));
+    //  dewpoint_f = (243.5 * (log(C_Humidity / 100) + ((17.67 * C_Temp) / (243.5 + C_Temp))) / (17.67 - log(C_Humidity / 100) - ((17.67 * C_Temp) / (243.5 + C_Temp)))) * 9 / 5 + 32;
+    ccs811.set_envdata(C_Temp, C_Humidity);
+    updateState();
+  } else {
+    checkIaqSensorStatus();
+  }
   ccs811.read(&eco2, &etvoc, &errstat, &raw);  // Co2, VoC Sensor
   CO2Health = CalculateCO2Health(CO2Health_Score);
   veml6075.poll();  // UVa UVb UVi
@@ -533,6 +522,30 @@ void Read_SensorPack(void) {
   }
   else if (iaq_acc == 3) {
     iaq_acc_text = "Poor";
+  }
+  bme680_output();
+}
+//*****************************************************************************************
+void bme680_output(void) {
+  if (DebugMode == 1) {
+    output = String();
+    // output += ", " + String(iaqSensor.rawTemperature);
+    output += "Pressure: " + String(iaqSensor.pressure);
+    // output += ", " + String(iaqSensor.rawHumidity);
+    // output += ", " + String(iaqSensor.gasResistance);
+    output += " IAQ: " + String(iaqSensor.iaq);
+    output += " IAQ acc: " + String(iaqSensor.iaqAccuracy);
+    output += " T: " + String(iaqSensor.temperature);
+    output += " RH: " + String(iaqSensor.humidity);
+    output += " Static IAQ: " + String(iaqSensor.staticIaq);
+    output += " CO2: " + String(iaqSensor.co2Equivalent);
+    output += " VOC: " + String(iaqSensor.breathVocEquivalent);
+    output += " Static IAQ acc: " + String(iaqSensor.staticIaqAccuracy);
+    output += " CO2 acc: " + String(iaqSensor.co2Accuracy);
+    output += " VOC acc: " + String(iaqSensor.breathVocAccuracy);
+    output += " Gas R acc: " + String(iaqSensor.compGasAccuracy);
+    output += " Gas % acc: " + String(iaqSensor.gasPercentageAcccuracy);
+    Serial.println(output);
   }
 }
 //*****************************************************************************************
@@ -608,16 +621,16 @@ void Screen_1(void) {
 void Screen_2(void) {
   display.setFont(ArialMT_Plain_10);
   display.drawString(0, 13, "RH");
-  display.drawString(55, 13, "Abs"); display.drawString(55, 20, "Hum");
-  display.drawString(55, 29, "Dew"); display.drawString(55, 36, "Pnt");
-  display.drawString(0, 29, "Air"); display.drawString(0, 35, "Qua");
+  display.drawString(68, 13, "Abs"); display.drawString(68, 20, "Hum");
+  display.drawString(68, 29, "Dew"); display.drawString(68, 37, "Pnt");
+  display.drawString(0, 29, "Air"); display.drawString(0, 37, "Qua");
   display.setFont(ArialMT_Plain_16);
-  display.drawString(15, 13, String(C_Humidity, 0) + "%");
-  display.drawString(77, 13, (String (ab_humi, 1)));
-  display.drawString(80, 30, (String (dewpoint_c, 0) + "°" + "c"));
+  display.drawString(22, 13, String(C_Humidity, 0) + "%");
+  display.drawString(92, 13, (String (ab_humi, 1)));
+  display.drawString(88, 30, (String (dewpoint_c, 0) + "°" + "c"));
   display.drawString(22, 30, String((iaq_score), 0));
   display.drawString(0, 47, String (IAQ));
-  display.drawString(90, 47, "A:" + String((iaq_acc), 0));
+  display.drawString(90, 47, "A" + String((iaq_acc), 0));
   display.display();
 }
 void Screen_3(void) {
@@ -701,8 +714,6 @@ void Write_TS(void) {
   }
 }
 //*****************************************************************************************
-
-//*****************************************************************************************
 String CalculateCO2Health(int CO2Health_Score) {
   String CO2Health_text = "";
   if (eco2 >= 40000) {
@@ -726,14 +737,14 @@ String CalculateCO2Health(int CO2Health_Score) {
   else if (eco2 >= 801 && eco2 <= 1500) {
     CO2Health_text += "Fair";
     digitalWrite(ledCO2b, LOW);
-    digitalWrite(ledCO2g, LOW);
+    digitalWrite(ledCO2g, HIGH);
     digitalWrite(ledCO2r, HIGH);
   }
   else if (eco2 >=  601 && eco2 <= 800) {
     CO2Health_text += "Good";
     digitalWrite(ledCO2b, LOW);
     digitalWrite(ledCO2g, HIGH);
-    digitalWrite(ledCO2r, HIGH);
+    digitalWrite(ledCO2r, LEDState);
   }
   else if (eco2 >=  01 && eco2 <=  600) {
     CO2Health_text += "Excellent";
@@ -753,11 +764,8 @@ String CalculateCO2Health(int CO2Health_Score) {
   return CO2Health_text;
 }
 //*****************************************************************************************
-//String CalculateIAQ(int score) {
 String CalculateIAQ() {
   String IAQ_text = "";
-  //  score = (100 - score) * 5;
-  //  IAQscore = score;
   if (iaq_score >= 301) {
     IAQ_text += "Hazardous";
     digitalWrite(ledIAQb, LOW);
@@ -887,12 +895,69 @@ void err_Leds_bme680(void)
   digitalWrite(ledIAQr, LEDState);
 }
 //*****************************************************************************************
+void loadState(void)
+{
+  if (EEPROM.read(0) == BSEC_MAX_STATE_BLOB_SIZE) {
+    // Existing state in EEPROM
+    Serial.println("Reading state from EEPROM");
+
+    for (uint8_t i = 0; i < BSEC_MAX_STATE_BLOB_SIZE; i++) {
+      bsecState[i] = EEPROM.read(i + 1);
+      Serial.println(bsecState[i], HEX);
+    }
+
+    iaqSensor.setState(bsecState);
+    checkIaqSensorStatus();
+  } else {
+    // Erase the EEPROM with zeroes
+    Serial.println("Erasing EEPROM");
+
+    for (uint8_t i = 0; i < BSEC_MAX_STATE_BLOB_SIZE + 1; i++)
+      EEPROM.write(i, 0);
+
+    EEPROM.commit();
+  }
+}
+//*****************************************************************************************
+void updateState(void)
+{
+  bool update = false;
+  /* Set a trigger to save the state. Here, the state is saved every STATE_SAVE_PERIOD with the first state being saved once the algorithm achieves full calibration, i.e. iaqAccuracy = 3 */
+  if (stateUpdateCounter == 0) {
+    if (iaqSensor.iaqAccuracy >= 3) {
+      update = true;
+      stateUpdateCounter++;
+    }
+  } else {
+    /* Update every STATE_SAVE_PERIOD milliseconds */
+    if ((stateUpdateCounter * STATE_SAVE_PERIOD) < millis()) {
+      update = true;
+      stateUpdateCounter++;
+    }
+  }
+
+  if (update) {
+    iaqSensor.getState(bsecState);
+    checkIaqSensorStatus();
+
+    Serial.println("Writing state to EEPROM");
+
+    for (uint8_t i = 0; i < BSEC_MAX_STATE_BLOB_SIZE ; i++) {
+      EEPROM.write(i + 1, bsecState[i]);
+      Serial.println(bsecState[i], HEX);
+    }
+
+    EEPROM.write(0, BSEC_MAX_STATE_BLOB_SIZE);
+    EEPROM.commit();
+  }
+}
+//*****************************************************************************************
 void powerSaving(void) {
   btStop();
-//  for (byte i = 13; i <= 33; i++) {
-//    pinMode(i, INPUT_PULLUP);
-//    digitalWrite(i, LOW);
-//  }
+  //  for (byte i = 13; i <= 33; i++) {
+  //    pinMode(i, INPUT_PULLUP);
+  //    digitalWrite(i, LOW);
+  //  }
   pinMode(ONBOARD_LED, OUTPUT);
   pinMode(wake, OUTPUT);// CO2 Sensor
   pinMode(ledCO2b, OUTPUT);// Blue - Co2
@@ -908,6 +973,8 @@ void powerSaving(void) {
   digitalWrite(ledIAQg, LOW);
   digitalWrite(ledIAQb, LOW);
 }
+//*****************************************************************************************
+
 //*****************************************************************************************
 void ccs811_error_status(void)
 {
