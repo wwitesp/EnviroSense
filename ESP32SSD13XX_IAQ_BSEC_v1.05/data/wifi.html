@@ -1,0 +1,89 @@
+<!DOCTYPE HTML><html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <title>WiFi</title>
+  <style>
+	  body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      text-align: center;
+    }
+    h1 {
+      font-size: 50px;
+      color: blue;
+    }
+    h4 {
+      font-size: 30px;
+      color: green;
+    }
+     h5 {
+      font-size: 28px;
+      color: black;
+    }
+     h6 {
+      font-size: 18px;
+      color: black;
+    }
+     p { font-size: 1.2rem; }
+    .units { font-size: 1.2rem; }
+    .readings { font-size: 2.0rem; }
+  </style>
+  </head>
+  <body>
+	  <div class = "boarder">
+     <header>
+       <h1>WiFi</h1>
+     <header>
+		 <main>
+		<p>
+		<h4>Temp: <span id="current_temp" class="readings">%CURRENT_TEMP%</span><sup>&deg;C</sup></h4>
+		</p>
+		<p>
+ 		<h4>Humidity: <span id="current_humidity" class="readings">%CURRENT_HUMIDITY%</span><sup>&#37;</sup></h4>
+		</p>
+		<p>
+        <h4>Pressure: <span id="current_pressure" class="readings">%CURRENT_PRESSURE%</span><sup>hpa</sup></h4>
+        </p>
+		<p>
+        <h4>IAQ Score: <span id="air_quality_score" class="readings">%AIR_QUALITY_SCORE%</span></h4>
+        </p>
+		<p>       
+        <h4>IAQ Qual: <span id="current_pressure" class="readings">%FINAL_AIR_QUALITY_SCORE%</span></h4>
+        </p>
+		<p>        
+        <h6>FW: <span id="fw" class="readings">%FW%</span></h6>
+        </p>
+		<p>        
+        <h6>Serial: <span id="chipid" class="readings">%CHIPID%</span></h6>
+        </p>
+		<p>        
+        <h6>Up Time: <span id="getUptime" class="readings">%GETUPTIME%</span></h6>
+        </p>
+        <p><a href=index.html><button class=\"button\">Main Page</button></a></p>
+        
+     </div>
+     </main>
+     <script>
+setInterval(updateValues, 1000, "current_temp");
+setInterval(updateValues, 1000, "current_humidity");
+setInterval(updateValues, 1000, "current_pressure");
+setInterval(updateValues, 1000, "air_quality_score");
+setInterval(updateValues, 1000, "final_air_quality_score");
+setInterval(updateValues, 1000, "fw");
+setInterval(updateValues, 1000, "chipid");
+setInterval(updateValues, 1000, "getUptime");
+
+function updateValues(value) {
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      document.getElementById(value).innerHTML = this.responseText;
+    }
+  };
+  xhttp.open("GET", "/" + value, true);
+  xhttp.send();
+}
+</script>
+</body>
+</html>
